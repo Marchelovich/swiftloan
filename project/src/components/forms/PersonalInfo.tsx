@@ -98,6 +98,17 @@ export const PersonalInfo = ({ data, onChange }) => (
         <option value="other">Other</option>
         <option value="prefer-not">Prefer not to say</option>
       </select>
+
+      <div className="space-y-2">
+        <label className="block text-gray-400">ID Verification</label>
+        <input
+          type="file"
+          accept="image/*,.pdf"
+          className="w-full bg-gray-800 text-white rounded-lg p-3 border border-gray-700"
+          onChange={(e) => onChange('idVerification', e.target.files[0])}
+        />
+        <p className="text-sm text-gray-400">Upload a valid government ID (driver's license, passport, etc.)</p>
+      </div>
     </form>
   </div>
 );

@@ -10,9 +10,9 @@ export const ApplicationForm = ({ onClose }) => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     loanDetails: { 
-      loanAmount:  process.env.REACT_APP_LOAN_AMOUNT,
-      termDays: process.env.REACT_APP_TERM_DAYS,
-      paymentFrequency: process.env.REACT_APP_PAYMENT_FREUENCY
+      loanAmount:  import.meta.env.VITE_REACT_APP_LOAN_AMOUNT,
+      termDays: import.meta.env.VITE_REACT_APP_TERM_DAYS,
+      paymentFrequency: import.meta.env.VITE_REACT_APP_PAYMENT_FREUENCY
     },
     personalInfo: {},
     residentialInfo: {},
@@ -63,33 +63,84 @@ export const ApplicationForm = ({ onClose }) => {
     }));
   };
 
-  const validateStep = () => { 
-   
-    // Добавьте свою логику валидации
-    // Например, если обязательные поля пустые, вернуть false
+  const validateStep = () => {
+    const currentData = formData[Object.keys(formData)[step - 1]];
+  
+    if (step === 1) {
+      if (!currentData.loanAmount || !currentData.termDays || !currentData.paymentFrequency) {
+        alert('Please fill in all required fields before proceeding.');
+        return false;
+      }
+    }
+    if (step === 2) {
+      if (!currentData.firstName || !currentData.lastName || !currentData.email || !currentData.birthYear ||
+        !currentData.birthMonth || !currentData.birthDay || !currentData.cellPhone || !currentData.gender) {
+        alert('Please fill in all required fields before proceeding.');
+        return false;
+      }
+    }
+    if (step === 3) {
+      if (!currentData.address || !currentData.city || !currentData.province || !currentData.postalCode) {
+        alert('Please fill in all required fields before proceeding.');
+        return false;
+      }
+    }
+    if (step === 4) {
+      if (!currentData.employmentStatus || !currentData.monthlyIncomeRange || !currentData.incomeFrequency) {
+        alert('Please fill in all required fields before proceeding.');
+        return false;
+      }
+    }
+    if (step === 5) {
+      if (
+        !currentData.cardNumber ||
+        !currentData.cardName ||
+        !currentData.expiryMonth ||
+        !currentData.expiryYear ||
+        !currentData.cvv
+        //  ||
+        // !currentData.termsAccepted
+      ) {
+        alert('Please fill in all required fields before proceeding.');
+        return false;
+      }
+    }
+  
     return true;
   };
-
+  
   const handleSubmit = async () => {
     try {
-      const back = "http://localhost:5000"
-      const response = await fetch(back + '/submit-application', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+      const formDataToSend = new FormData();
+      Object.keys(formData).forEach((section) => {
+        Object.keys(formData[section]).forEach((key) => {
+          const value = formData[section][key];
+          if (value instanceof File) {
+            formDataToSend.append(key, value); // Для файла
+          } else {
+            formDataToSend.append(key, value); // Для остальных данных
+          }
+        });
+      });
+
+      const response = await fetch('http://localhost:5000/submit-application', {
+         method: 'POST',
+         body: formDataToSend, // Используем FormData
       });
 
       if (!response.ok) {
-        throw new Error('Error sending data');
+       throw new Error('Error sending data');
       }
-
-      alert('Application sent successfully!');
-      onClose();
+    
+        alert('Application sent successfully!');
+        onClose();
     } catch (error) {
       console.error('Sending error:', error);
       alert('Failed to submit your request. Please try again.');
     }
   };
+    
+ 
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">

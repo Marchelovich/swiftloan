@@ -12,11 +12,27 @@ import { ApplicationForm } from './components/ApplicationForm';
 
 const App = () => {
   const [showApplication, setShowApplication] = useState(false);
-
+  const [formData, setFormData] = useState({
+    loanDetails: { 
+      loanAmount: import.meta.env.VITE_REACT_APP_LOAN_AMOUNT,
+      termDays: import.meta.env.VITE_REACT_APP_TERM_DAYS,
+      paymentFrequency: import.meta.env.VITE_REACT_APP_PAYMENT_FREUENCY
+    },
+  });
   // Make the openLoanApplication function available globally
   React.useEffect(() => {
     window.openLoanApplication = () => setShowApplication(true);
   }, []);
+
+  const handleChange = (formName, fieldName, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [formName]: {
+        ...prev[formName],
+        [fieldName]: value,
+      },
+    }));
+  };
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -26,7 +42,9 @@ const App = () => {
       
       <main className="container mx-auto px-4 space-y-24">
         <section id="calculator">
-          <LoanCalculator />
+          <LoanCalculator 
+          data={formData.loanDetails}
+          onChange={(field, value) => handleChange('loanDetails', field, value)}/>
         </section>
 
         <section id="features">

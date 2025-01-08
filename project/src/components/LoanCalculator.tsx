@@ -1,11 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Calculator, Calendar, DollarSign, Sparkles } from 'lucide-react';
 
-// export const LoanCalculator = ({ data, onChange, isShowMoneyButton = true }) => {
-
-
   export const LoanCalculator = ({
-    data = { loanAmount: 5000, termDays: 30, paymentFrequency: 'monthly' },
+    data,
     onChange,
     isShowMoneyButton = true,
   }) => {
@@ -14,7 +11,6 @@ import { Calculator, Calendar, DollarSign, Sparkles } from 'lucide-react';
     const amount = data.loanAmount;
     const term =  data.termDays;
     const frequency =  data.paymentFrequency || 'monthly';
-console.log(data.loanAmount);
     const calculatePayment = () => {
       const payment = (amount * (1 + MONTHLY_RATE * (term / 30))) / term;
       return payment.toFixed(2);

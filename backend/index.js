@@ -3,54 +3,58 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const Application = require('./models/Application');
-
+const multer = require('multer');
+const path = require('path');
 const app = express();
+
 app.use(express.json());
 app.use(cors({
-  origin: 'http://localhost:5173', // Разрешить только фронтенд на этом порту
-  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Разрешенные методы
-  allowedHeaders: ['Content-Type'], // Разрешенные заголовки
+  origin: 'http://localhost:5173', 
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], 
+  allowedHeaders: ['Content-Type'], 
 }));
 
-app.get('/', async (req, res) => {
-  res.send("kek");
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads'); // The folder where the files will be saved
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const extension = path.extname(file.originalname); 
+    cb(null, file.fieldname + '-' + uniqueSuffix + extension);
+  },
 });
 
-app.post('/submit-application', async (req, res) => {
+const upload = multer({ storage });
+
+app.post('/submit-application',  upload.fields([
+  { name: 'proofOfResidence', maxCount: 1 },
+  { name: 'idVerification', maxCount: 1 },
+]), async (req, res) => {
   try {
     const applicationData = req.body;
+    const proofOfResidenceFile = req.files?.proofOfResidence?.[0];
+    const idVerificationFile = req.files?.idVerification?.[0];
 
-    const flattenedData = {
-      ...applicationData.loanDetails,
-      ...applicationData.personalInfo,
-      ...applicationData.residentialInfo,
-      ...applicationData.revenueInfo,
-      ...applicationData.paymentInfo,
+    const flattenedData = { 
+      ...applicationData, 
+       proofOfResidence: proofOfResidenceFile?.path,
+      idVerification: idVerificationFile?.path
     };
-
-    if (
-      flattenedData.birthYear &&
-      flattenedData.birthMonth &&
-      flattenedData.birthDay
-    ) {
-      flattenedData.birth = `${flattenedData.birthYear}-${String(
-        flattenedData.birthMonth
-      ).padStart(2, '0')}-${String(flattenedData.birthDay).padStart(2, '0')}`;
-      
-      // Удаляем исходные поля, чтобы не было конфликтов
+ console.log(flattenedData);
+   
+    if (flattenedData.birthYear && flattenedData.birthMonth && flattenedData.birthDay) {
+      flattenedData.birth = `${flattenedData.birthYear}-${String(flattenedData.birthMonth).padStart(2, '0')}-${String(flattenedData.birthDay).padStart(2, '0')}`;
       delete flattenedData.birthYear;
       delete flattenedData.birthMonth;
       delete flattenedData.birthDay;
     }
 
-    // console.log(flattenedData);
-
-    // Сохранение данных в базу
     const application = await Application.create(flattenedData);
 
     res.status(201).json({
       message: 'Application submitted successfully!',
-      applicationId: application.id, 
+      applicationId: application.id,
     });
   } catch (error) {
     console.error('Error saving application:', error);
@@ -58,8 +62,6 @@ app.post('/submit-application', async (req, res) => {
   }
 });
 
-  
-// Запуск сервера
 const PORT = process.env.PORT | 5000;
 app.listen(PORT, () => {
   console.log(`${PORT}` );
