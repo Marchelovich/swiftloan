@@ -1,4 +1,5 @@
 require('dotenv').config();
+require('./emailScheduler');
 
 const express = require('express');
 const cors = require('cors');
@@ -16,7 +17,7 @@ app.use(cors({
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads'); // The folder where the files will be saved
+    cb(null, process.env.UPLOADS_FOLDER || 'uploads');
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
