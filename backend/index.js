@@ -1,5 +1,5 @@
 require('dotenv').config();
-//require('./emailScheduler');
+require('./emailScheduler');
 
 const nodemailer = require('nodemailer');
 const express = require('express');
@@ -8,6 +8,8 @@ const Application = require('./models/Application');
 const multer = require('multer');
 const path = require('path');
 const app = express();
+const Stripe = require('stripe');
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
 
 app.use(express.json());
 app.use(cors({
@@ -91,6 +93,23 @@ app.post('/send-help-email', async (req, res) => {
   } catch (error) {
     console.error('Error sending email:', error);
     res.status(500).json({ message: 'Failed to send email' });
+  }
+});
+
+//Stripe
+app.post('/create-payment-intent', async (req, res) => {
+  const { amount } = req.body;
+
+  try {
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount, // сумма в центах
+      currency: 'usd',
+      payment_method_types: ['card'],
+    });
+
+    res.json({ clientSecret: paymentIntent.client_secret });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 

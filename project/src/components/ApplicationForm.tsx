@@ -4,8 +4,10 @@ import { LoanDetails } from './forms/LoanDetails';
 import { PersonalInfo } from './forms/PersonalInfo';
 import { ResidentialInfo } from './forms/ResidentialInfo';
 import { RevenueInfo } from './forms/RevenueInfo';
-import { PaymentInfo } from './forms/PaymentInfo';
+// import { PaymentInfo } from './forms/PaymentInfo';
 import { ConfirmationStep } from './forms/ConfirmationStep';
+import { loadStripe } from '@stripe/stripe-js';
+import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
 
 export const ApplicationForm = ({ onClose }) => {
   const [step, setStep] = useState(1);
@@ -20,6 +22,7 @@ export const ApplicationForm = ({ onClose }) => {
     revenueInfo: {},
     paymentInfo: {},
   });
+  const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
   const steps = {
     1: (
@@ -47,15 +50,28 @@ export const ApplicationForm = ({ onClose }) => {
       />
     ),
     5: (
-      <PaymentInfo
-        data={formData.paymentInfo}
-        onChange={(field, value) => handleChange('paymentInfo', field, value)}
-      />
+      <div className="mt-4">
+        <h3 className="text-white text-lg mb-2">Payment Details</h3>
+        <div className="bg-gray-800 p-4 rounded-lg">
+          <CardElement className="bg-gray-700 p-2 rounded-md" />
+        </div>
+        <p className="text-gray-400 text-sm mt-4">
+          You will be charged ${formData.loanDetails.loanAmount}. Complete the payment to submit your application.
+        </p>
+      </div>
     ),
+    // 5: (
+    //   <PaymentInfo
+    //     data={formData.paymentInfo}
+    //     onChange={(field, value) => handleChange('paymentInfo', field, value)}
+    //   />
+    // ),
     6: <ConfirmationStep />,
   };
 
   const handleChange = (formName, fieldName, value) => {
+    console.log('stripePromise:', stripePromise);
+
     setFormData((prev) => ({
       ...prev,
       [formName]: {
@@ -93,52 +109,110 @@ export const ApplicationForm = ({ onClose }) => {
         return false;
       }
     }
-    if (step === 5) {
-      if (
-        !currentData.cardNumber ||
-        !currentData.cardName ||
-        !currentData.expiryMonth ||
-        !currentData.expiryYear ||
-        !currentData.cvv
-        //  ||
-        // !currentData.termsAccepted
-      ) {
-        alert('Please fill in all required fields before proceeding.');
-        return false;
-      }
-    }
+    // if (step === 5) {
+    //   if (
+    //     !currentData.cardNumber ||
+    //     !currentData.cardName ||
+    //     !currentData.expiryMonth ||
+    //     !currentData.expiryYear ||
+    //     !currentData.cvv
+    //     //  ||
+    //     // !currentData.termsAccepted
+    //   ) {
+    //     alert('Please fill in all required fields before proceeding.');
+    //     return false;
+    //   }
+    // }
   
     return true;
   };
-  
+
   const handleSubmit = async () => {
     try {
+      const stripe = await stripePromise;
+  
+      // 1. Создать платежный интент на сервере
+      const paymentResponse = await fetch(`${import.meta.env.VITE_REACT_APP_BACKEND_URL}/create-payment-intent`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: formData.loanDetails.loanAmount * 100 }), // Преобразовать сумму в центы
+      });
+  
+      if (!paymentResponse.ok) {
+        throw new Error('Error creating payment intent');
+      }
+  
+      const { clientSecret } = await paymentResponse.json();
+  
+      // 2. Завершить платеж
+      const { error } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: elements.getElement(CardElement),
+          billing_details: {
+            name: `${formData.personalInfo.firstName} ${formData.personalInfo.lastName}`,
+            email: formData.personalInfo.email,
+          },
+        },
+      });
+  
+      if (error) {
+        throw new Error(`Payment failed: ${error.message}`);
+      }
+  
+      // 3. Отправить данные формы
       const formDataToSend = new FormData();
       Object.keys(formData).forEach((section) => {
         Object.keys(formData[section]).forEach((key) => {
           const value = formData[section][key];
-          if (value instanceof File) {
-            formDataToSend.append(key, value); 
-          } else {
-            formDataToSend.append(key, value); 
-          }
+          formDataToSend.append(key, value);
         });
       });
-
+  
       const response = await fetch(`${import.meta.env.VITE_REACT_APP_BACKEND_URL}/submit-application`, {
-         method: 'POST',
-         body: formDataToSend, 
+        method: 'POST',
+        body: formDataToSend,
       });
-
+  
       if (!response.ok) {
-       throw new Error('Error sending data');
-      } 
-      setStep(6);
+        throw new Error('Error submitting application');
+      }
+  
+      setStep(6); // Перейти к ConfirmationStep
     } catch (error) {
-      console.error('Sending error:', error);
-      alert('Failed to submit your request. Please try again.');
+      console.error('Error:', error);
+      alert('An error occurred. Please try again.');
     }
   };
+  
+  
+  // const handleSubmit = async () => {
+  //   try {
+  //     const formDataToSend = new FormData();
+  //     Object.keys(formData).forEach((section) => {
+  //       Object.keys(formData[section]).forEach((key) => {
+  //         const value = formData[section][key];
+  //         if (value instanceof File) {
+  //           formDataToSend.append(key, value); 
+  //         } else {
+  //           formDataToSend.append(key, value); 
+  //         }
+  //       });
+  //     });
+
+  //     const response = await fetch(`${import.meta.env.VITE_REACT_APP_BACKEND_URL}/submit-application`, {
+  //        method: 'POST',
+  //        body: formDataToSend, 
+  //     });
+
+  //     if (!response.ok) {
+  //      throw new Error('Error sending data');
+  //     } 
+  //     setStep(6);
+  //   } catch (error) {
+  //     console.error('Sending error:', error);
+  //     alert('Failed to submit your request. Please try again.');
+  //   }
+  // };
     
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -189,7 +263,7 @@ export const ApplicationForm = ({ onClose }) => {
               onClick={handleSubmit}
               className="px-6 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white"
             >
-              Submit Application
+              Pay & Submit
             </button>
           )}
         </div>
