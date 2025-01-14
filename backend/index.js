@@ -1,6 +1,7 @@
 require('dotenv').config();
-require('./emailScheduler');
+//require('./emailScheduler');
 
+const nodemailer = require('nodemailer');
 const express = require('express');
 const cors = require('cors');
 const Application = require('./models/Application');
@@ -15,6 +16,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type'], 
 }));
 
+//file upload
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, process.env.UPLOADS_FOLDER || 'uploads');
@@ -28,6 +30,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+//application form submit
 app.post('/submit-application',  upload.fields([
   { name: 'proofOfResidence', maxCount: 1 },
   { name: 'idVerification', maxCount: 1 },
@@ -42,7 +45,6 @@ app.post('/submit-application',  upload.fields([
        proofOfResidence: proofOfResidenceFile?.path,
       idVerification: idVerificationFile?.path
     };
- console.log(flattenedData);
    
     if (flattenedData.birthYear && flattenedData.birthMonth && flattenedData.birthDay) {
       flattenedData.birth = `${flattenedData.birthYear}-${String(flattenedData.birthMonth).padStart(2, '0')}-${String(flattenedData.birthDay).padStart(2, '0')}`;
@@ -63,6 +65,36 @@ app.post('/submit-application',  upload.fields([
   }
 });
 
+//help form send
+app.post('/send-help-email', async (req, res) => {
+  const { name, email, subject, message } = req.body;
+
+  try {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.SENDER_EMAIL, 
+        pass: process.env.SENDER_EMAIL_PASSWORD,
+      },
+    });
+
+    const mailOptions = {
+      from: process.env.SENDER_EMAIL,
+      to: process.env.SUPPORT_EMAIL,
+      subject: `Help Request: ${subject}`,
+      text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.status(200).json({ message: 'Email sent successfully' });
+  } catch (error) {
+    console.error('Error sending email:', error);
+    res.status(500).json({ message: 'Failed to send email' });
+  }
+});
+
+//server 
 const PORT = process.env.PORT | 5000;
 app.listen(PORT, () => {
   console.log(`${PORT}` );

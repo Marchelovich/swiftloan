@@ -5,6 +5,7 @@ import { PersonalInfo } from './forms/PersonalInfo';
 import { ResidentialInfo } from './forms/ResidentialInfo';
 import { RevenueInfo } from './forms/RevenueInfo';
 import { PaymentInfo } from './forms/PaymentInfo';
+import { ConfirmationStep } from './forms/ConfirmationStep';
 
 export const ApplicationForm = ({ onClose }) => {
   const [step, setStep] = useState(1);
@@ -51,6 +52,7 @@ export const ApplicationForm = ({ onClose }) => {
         onChange={(field, value) => handleChange('paymentInfo', field, value)}
       />
     ),
+    6: <ConfirmationStep />,
   };
 
   const handleChange = (formName, fieldName, value) => {
@@ -116,32 +118,28 @@ export const ApplicationForm = ({ onClose }) => {
         Object.keys(formData[section]).forEach((key) => {
           const value = formData[section][key];
           if (value instanceof File) {
-            formDataToSend.append(key, value); // Для файла
+            formDataToSend.append(key, value); 
           } else {
-            formDataToSend.append(key, value); // Для остальных данных
+            formDataToSend.append(key, value); 
           }
         });
       });
 
-      const response = await fetch('http://localhost:5000/submit-application', {
+      const response = await fetch(`${import.meta.env.VITE_REACT_APP_BACKEND_URL}/submit-application`, {
          method: 'POST',
-         body: formDataToSend, // Используем FormData
+         body: formDataToSend, 
       });
 
       if (!response.ok) {
        throw new Error('Error sending data');
-      }
-    
-        alert('Application sent successfully!');
-        onClose();
+      } 
+      setStep(6);
     } catch (error) {
       console.error('Sending error:', error);
       alert('Failed to submit your request. Please try again.');
     }
   };
     
- 
-
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl bg-gray-900/50 backdrop-blur-lg rounded-2xl p-6">
@@ -174,7 +172,7 @@ export const ApplicationForm = ({ onClose }) => {
               Back
             </button>
           )}
-          {step < 5 ? (
+          {step < 5 && (
             <button
               onClick={() => {
                 if (validateStep()) setStep(step + 1);
@@ -185,7 +183,8 @@ export const ApplicationForm = ({ onClose }) => {
             >
               Next
             </button>
-          ) : (
+          )}
+          {step === 5 && (
             <button
               onClick={handleSubmit}
               className="px-6 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white"

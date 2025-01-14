@@ -13,11 +13,29 @@ export const HelpForm: React.FC<HelpFormProps> = ({ onClose }) => {
     message: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert('Message sent successfully!');
-    onClose();
+  
+    try {
+      const response = await fetch(`${import.meta.env.VITE_REACT_APP_BACKEND_URL}/send-help-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+  
+      if (response.ok) {
+        alert('Message sent successfully!');
+        setForm({ name: '', email: '', subject: '', message: '' });
+        onClose();
+      } else {
+        alert('Failed to send message. Please try again later.');
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      alert('An error occurred. Please try again.');
+    }
   };
+  
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
