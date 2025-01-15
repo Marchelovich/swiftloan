@@ -119,26 +119,10 @@ const Application = sequelize.define('Application', {
     type: DataTypes.ENUM('weekly', 'biweekly', 'monthly'),
     allowNull: false,
   },
-  cardNumber: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  cardName: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  expiryMonth: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  expiryYear: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  cvv: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
+  isPaid: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  }, 
 });
 
 module.exports = Application;

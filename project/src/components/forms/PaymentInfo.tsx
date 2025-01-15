@@ -16,50 +16,6 @@ export const PaymentInfo = ({ data, onChange }) => (
       </ul>
     </div>
     <form className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <input
-          type="text"
-          placeholder="Card Number*"
-          className="w-full bg-gray-800 text-white rounded-lg p-3 border border-gray-700"
-          value={data.cardNumber || ''}
-          onChange={(e) => onChange('cardNumber', e.target.value)}
-          required
-        />
-        <input
-          type="text"
-          placeholder="Name on Card*"
-          className="w-full bg-gray-800 text-white rounded-lg p-3 border border-gray-700"
-          value={data.cardName || ''}
-          onChange={(e) => onChange('cardName', e.target.value)}
-          required
-        />
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <input
-          type="text"
-          placeholder="MM*"
-          className="w-full bg-gray-800 text-white rounded-lg p-3 border border-gray-700"
-          value={data.expiryMonth || ''}
-          onChange={(e) => onChange('expiryMonth', e.target.value)}
-          required
-        />
-        <input
-          type="text"
-          placeholder="YY*"
-          className="w-full bg-gray-800 text-white rounded-lg p-3 border border-gray-700"
-          value={data.expiryYear || ''}
-          onChange={(e) => onChange('expiryYear', e.target.value)}
-          required
-        />
-        <input
-          type="text"
-          placeholder="CVV*"
-          className="w-full bg-gray-800 text-white rounded-lg p-3 border border-gray-700"
-          value={data.cvv || ''}
-          onChange={(e) => onChange('cvv', e.target.value)}
-          required
-        />
-      </div>
       <div className="space-y-4">
         <label className="flex items-center space-x-2">
           <input

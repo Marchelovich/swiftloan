@@ -126,25 +126,9 @@ module.exports = {
         type: Sequelize.ENUM('weekly', 'biweekly', 'monthly'),
         allowNull: false,
       },
-      cardNumber: {
-        type: Sequelize.STRING,
-        allowNull: false,
-      },
-      cardName: {
-        type: Sequelize.STRING,
-        allowNull: false,
-      },
-      expiryMonth: {
-        type: Sequelize.STRING,
-        allowNull: false,
-      },
-      expiryYear: {
-        type: Sequelize.STRING,
-        allowNull: false,
-      },
-      cvv: {
-        type: Sequelize.STRING,
-        allowNull: false,
+      isPaid: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false, 
       },
       createdAt: {
         type: Sequelize.DATE,

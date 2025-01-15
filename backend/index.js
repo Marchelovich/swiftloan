@@ -8,14 +8,14 @@ const Application = require('./models/Application');
 const multer = require('multer');
 const path = require('path');
 const app = express();
-const Stripe = require('stripe');
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY); // Инициализация Stripe SDK
+const jwt = require('jsonwebtoken');
 
 app.use(express.json());
 app.use(cors({
-  origin: 'http://localhost:5173', 
+  origin: 'http://localhost:5173',   // `${process.env.FRONTEND_URL}
   methods: ['GET', 'POST', 'PUT', 'DELETE'], 
-  allowedHeaders: ['Content-Type'], 
+  allowedHeaders: ['Content-Type', 'Authorization'], 
 }));
 
 //file upload
@@ -96,22 +96,84 @@ app.post('/send-help-email', async (req, res) => {
   }
 });
 
-//Stripe
-app.post('/create-payment-intent', async (req, res) => {
-  const { amount } = req.body;
+app.post('/create-checkout-session', async (req, res) => {
+  const { applicationId } = req.body;
+
+  if (!applicationId) {
+    return res.status(400).send({ error: 'Application ID is required' });
+  }
 
   try {
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount, // сумма в центах
-      currency: 'usd',
+    const application = await Application.findByPk(applicationId);
+    if (!application) {
+      return res.status(404).send({ error: 'Application not found' });
+    }
+
+    const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
+      customer_email: application.email,
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: 'Loan Application Fee',
+              description: 'Processing fee for your loan application',
+            },
+            unit_amount: application.loanAmount * 100, // in cent
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: `${process.env.FRONTEND_URL}?session_id={CHECKOUT_SESSION_ID}`, // URL успешной оплаты
+      cancel_url: `${process.env.FRONTEND_URL}/cancel`, // URL отмены
+      metadata: { applicationId }, // Добавляем applicationId в метаданные
     });
 
-    res.json({ clientSecret: paymentIntent.client_secret });
+    res.json({ url: session.url }); // Возвращаем URL для перехода на Stripe Checkout
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Error creating Stripe session:', error);
+    res.status(500).send({ error: 'Failed to create Stripe session' });
   }
 });
+
+app.get('/handle-success', async (req, res) => {
+  const sessionId = req.query.session_id;
+
+  if (!sessionId) {
+    return res.status(400).send({ error: 'Session ID is required' });
+  }
+
+  try {
+    // Получаем данные о сессии из Stripe
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+    // Извлекаем applicationId из метаданных
+    const applicationId = session.metadata.applicationId;
+
+    // Найти заявку в базе данных
+    const application = await Application.findByPk(applicationId);
+console.error(application);
+    if (!application) {
+      return res.status(404).send({ error: 'Application not found' });
+    }
+
+    // Обновить статус заявки (например, пометить как оплаченную)
+    application.isPaid = true; // Добавьте поле `isPaid` в модель Application
+    await application.save();
+
+    console.log(`Payment successful for application ID: ${applicationId}`);
+
+    // Перенаправляем на фронтенд (например, на страницу успеха)
+    res.redirect(`${process.env.FRONTEND_URL}/?step=7&applicationId=${applicationId}`);
+  } catch (error) {
+    console.error('Error handling success:', error);
+    res.status(500).send({ error: 'Failed to handle success' });
+  }
+});
+
+
 
 //server 
 const PORT = process.env.PORT | 5000;
