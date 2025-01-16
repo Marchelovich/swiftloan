@@ -126,7 +126,7 @@ app.post('/create-checkout-session', async (req, res) => {
         },
       ],
       mode: 'payment',
-      success_url: `${process.env.FRONTEND_URL}?session_id={CHECKOUT_SESSION_ID}`, // URL успешной оплаты
+      success_url: `${process.env.BACKEND_URL}/handle-success?session_id={CHECKOUT_SESSION_ID}`, // URL успешной оплаты
       cancel_url: `${process.env.FRONTEND_URL}/cancel`, // URL отмены
       metadata: { applicationId }, // Добавляем applicationId в метаданные
     });
@@ -154,7 +154,7 @@ app.get('/handle-success', async (req, res) => {
 
     // Найти заявку в базе данных
     const application = await Application.findByPk(applicationId);
-console.error(application);
+    console.error(application);
     if (!application) {
       return res.status(404).send({ error: 'Application not found' });
     }

@@ -8,6 +8,7 @@ import { PaymentInfo } from './forms/PaymentInfo';
 import { ConfirmationStep } from './forms/ConfirmationStep';
 import { loadStripe } from '@stripe/stripe-js';
 
+
 export const ApplicationForm = ({ onClose }) => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -159,7 +160,7 @@ export const ApplicationForm = ({ onClose }) => {
 
       const response = await fetch(`${import.meta.env.VITE_REACT_APP_BACKEND_URL}/submit-application`, {
          method: 'POST',
-         body: formDataToSend, 
+         body: formDataToSend,
       });
      
       if (!response.ok) {

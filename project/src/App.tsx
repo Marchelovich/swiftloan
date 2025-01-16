@@ -9,9 +9,11 @@ import { FAQ } from './components/FAQ/FAQ';
 import { Footer } from './components/Footer/Footer';
 import { ScrollPrompt } from './components/ScrollPrompt/ScrollPrompt';
 import { ApplicationForm } from './components/ApplicationForm';
+const urlParams = new URLSearchParams(window.location.search);
+const step = urlParams.get('step') as unknown as number;
 
 const App = () => {
-  const [showApplication, setShowApplication] = useState(false);
+  const [showApplication, setShowApplication] = useState(step == 7);
   const [formData, setFormData] = useState({
     loanDetails: { 
       loanAmount: import.meta.env.VITE_REACT_APP_LOAN_AMOUNT,
@@ -67,7 +69,7 @@ const App = () => {
       <Footer />
 
       {showApplication && (
-        <ApplicationForm onClose={() => setShowApplication(false)} />
+        <ApplicationForm onClose={() => setShowApplication(step === 7)} />
       )}
     </div>
   );
