@@ -14,7 +14,7 @@ export const CareersModal: React.FC<CareersModalProps> = ({ onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-4xl bg-gray-900/50 backdrop-blur-lg rounded-2xl p-6">
+      <div className="w-full max-w-lg sm:max-w-md md:max-w-xl lg:max-w-4xl bg-gray-900/50 backdrop-blur-lg rounded-2xl p-4 sm:p-6 lg:p-8">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-white">
             {selectedJob ? 'Apply for Position' : 'Join Our Team'}

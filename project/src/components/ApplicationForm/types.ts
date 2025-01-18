@@ -16,6 +16,7 @@ export interface ResidentialInfoData {
   apt: string;
   city: string;
   province: string;
+  country: string; // Added country property
   postalCode: string;
 }
 
@@ -32,6 +33,7 @@ export interface PaymentInfoData {
   expiryYear: string;
   cvv: string;
   acceptTerms: boolean;
+  receiveUpdates: boolean; // Added receiveUpdates property
 }
 
 export interface FormData {
@@ -59,6 +61,7 @@ export const initialFormData: FormData = {
     apt: '',
     city: '',
     province: '',
+    country: '', // Added default value for country
     postalCode: '',
   },
   revenueInfo: {
@@ -73,5 +76,6 @@ export const initialFormData: FormData = {
     expiryYear: '',
     cvv: '',
     acceptTerms: false,
+    receiveUpdates: false, // Added default value for receiveUpdates
   },
 };

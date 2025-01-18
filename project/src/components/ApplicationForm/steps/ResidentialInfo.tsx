@@ -45,11 +45,11 @@ export const ResidentialInfo: React.FC<ResidentialInfoProps> = ({
           onChange={(value) => onUpdate({ city: value })}
           required
         />
-        <FormSelect
-          options={provinceOptions}
-          value={data.province}
-          onChange={(value) => onUpdate({ province: value })}
-          placeholder="Province"
+        <FormInput
+          type="text"
+          placeholder="Country"
+          value={data.country}
+          onChange={(value) => onUpdate({ country: value })}
           required
         />
         <FormInput

@@ -39,7 +39,7 @@ export const AmountSlider: React.FC<AmountSliderProps> = ({
           [&::-webkit-slider-thumb]:hover:scale-110
           [&::-webkit-slider-thumb]:shadow-lg"
       />
-      <div className="absolute -bottom-6 left-0 w-full flex justify-between text-xs text-gray-500">
+      <div className="absolute -bottom-6 left-0 w-full flex justify-between text-xs sm:text-sm md:text-base text-gray-500">
         {marks.map((mark) => (
           <span key={mark} className="relative">
             <span className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-0.5 h-2 bg-gray-600"></span>

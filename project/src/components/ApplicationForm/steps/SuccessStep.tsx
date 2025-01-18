@@ -3,10 +3,15 @@ import { CheckCircle } from 'lucide-react';
 
 interface SuccessStepProps {
   email: string;
+  onClose: () => void;
 }
 
-export const SuccessStep: React.FC<SuccessStepProps> = ({ email }) => (
-  <div className="text-center space-y-6 py-8">
+export const SuccessStep: React.FC<SuccessStepProps> = ({ email, onClose }) => (
+  <div className="text-center space-y-6 py-8 relative">
+    <button onClick={onClose} className="absolute top-4 right-4 text-white hover:text-gray-400">
+      &times;
+    </button>
+
     <div className="flex justify-center">
       <CheckCircle className="w-16 h-16 text-green-500" />
     </div>

@@ -69,6 +69,42 @@ export const PaymentInfo: React.FC<PaymentInfoProps> = ({
       >
         I agree to the Terms & Conditions
       </FormCheckbox>
+      <FormCheckbox
+        checked={data.acceptTerms}
+        onChange={(checked) => onUpdate({ acceptTerms: checked })}
+        required
+      >
+        I agree to the Terms & Conditions
+      </FormCheckbox>
+      <FormCheckbox
+        checked={data.receiveUpdates}
+        onChange={(checked) => onUpdate({ receiveUpdates: checked })}
+      >
+        I agree to receive updates, news, and automated emails from SwiftLoan.
+      </FormCheckbox>
+      <div className="flex justify-between gap-4">
+      <div className="flex justify-between gap-4">
+      <div className="flex justify-between gap-4">
+      <div className="flex justify-between gap-4">
+      <div className="flex justify-between gap-4">
+      <div className="flex justify-between gap-4">
+      <div className="flex justify-between gap-4">
+      <div className="flex justify-between gap-4">
+      <div className="flex justify-between gap-4">
+      <div className="flex justify-between gap-4">
+      <div className="flex justify-between gap-4">
+      <div className="flex justify-between gap-4">
+      <div className="flex justify-between gap-4">
+      <div className="flex justify-between gap-4">
+      <div className="flex justify-between gap-4">
+      <div className="flex justify-between gap-4">
+      <div className="flex justify-between gap-4">
+        checked={data.acceptTerms}
+        onChange={(checked) => onUpdate({ acceptTerms: checked })}
+        required
+      >
+        I agree to the Terms & Conditions
+      </FormCheckbox>
       <div className="flex justify-between gap-4">
         <button
           type="button"
