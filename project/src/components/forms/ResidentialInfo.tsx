@@ -1,4 +1,16 @@
-export const ResidentialInfo = ({ data, onChange }) => (
+interface ResidentialInfoProps {
+  data: {
+    address: string;
+    aptSuite?: string;
+    city: string;
+    country: string;
+    postalCode: string;
+    proofOfResidence?: File;
+  };
+  onChange: (field: string, value: any) => void;
+}
+
+export const ResidentialInfo: React.FC<ResidentialInfoProps> = ({ data, onChange }) => (
   <div className="space-y-4">
     <h3 className="text-xl text-white mb-4">Residential Information</h3>
     <form className="space-y-4">
@@ -26,45 +38,23 @@ export const ResidentialInfo = ({ data, onChange }) => (
           onChange={(e) => onChange('city', e.target.value)}
           required
         />
-        <select
-          className="w-full bg-gray-800 text-white rounded-lg p-3 border border-gray-700"
-          value={data.province || ''}
-          onChange={(e) => onChange('province', e.target.value)}
-          required
-        >
-          <option value="">Province*</option>
-          <option value="AB">Alberta</option>
-          <option value="BC">British Columbia</option>
-          <option value="MB">Manitoba</option>
-          <option value="NB">New Brunswick</option>
-          <option value="NL">Newfoundland and Labrador</option>
-          <option value="NS">Nova Scotia</option>
-          <option value="ON">Ontario</option>
-          <option value="PE">Prince Edward Island</option>
-          <option value="QC">Quebec</option>
-          <option value="SK">Saskatchewan</option>
-        </select>
         <input
           type="text"
-          placeholder="Postal Code*"
+          placeholder="Enter Your country*"
           className="w-full bg-gray-800 text-white rounded-lg p-3 border border-gray-700"
-          value={data.postalCode || ''}
-          onChange={(e) => onChange('postalCode', e.target.value)}
+          value={data.country || ''}
+          onChange={(e) => onChange('country', e.target.value)}
           required
         />
       </div>
-      <div className="space-y-2">
-        <label className="block text-gray-400">Proof of Residence</label>
-        <input
-          type="file"
-          accept="image/*,.pdf"
-          className="w-full bg-gray-800 text-white rounded-lg p-3 border border-gray-700"
-          onChange={(e) => onChange('proofOfResidence', e.target.files[0])}
-        />
-        <p className="text-sm text-gray-400">
-          Upload proof of residence (utility bill, rental agreement, etc.)
-        </p>
-      </div>
+      <input
+        type="text"
+        placeholder="Postal Code*"
+        className="w-full bg-gray-800 text-white rounded-lg p-3 border border-gray-700"
+        value={data.postalCode || ''}
+        onChange={(e) => onChange('postalCode', e.target.value)}
+        required
+      />
     </form>
   </div>
 );

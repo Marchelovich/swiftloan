@@ -1,4 +1,12 @@
-export const PaymentInfo = ({ data, onChange }) => (
+interface PaymentInfoProps {
+  data: {
+    termsAccepted: boolean;
+    updatesAccepted?: boolean;
+  };
+  onChange: (field: string, value: any) => void;
+}
+
+export const PaymentInfo: React.FC<PaymentInfoProps> = ({ data, onChange }) => (
   <div className="space-y-4">
     <h3 className="text-xl text-white mb-4">Payment Information</h3>
     <div className="bg-gray-800 p-4 rounded-lg mb-4">
@@ -27,7 +35,20 @@ export const PaymentInfo = ({ data, onChange }) => (
           />
           <span className="text-gray-400">I agree to the Terms & Conditions, Privacy Policy, and Cookie Policy</span>
         </label>
+        <label className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            className="form-checkbox"
+            checked={data.updatesAccepted || false}
+            onChange={(e) => onChange('updatesAccepted', e.target.checked)}
+          />
+          <span className="text-gray-400">I agree to receive updates, news, and automated emails from SwiftLoan</span>
+        </label>
       </div>
+      </div>
+    </form>
+  </div>
+);
     </form>
   </div>
 );

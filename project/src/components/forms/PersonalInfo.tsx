@@ -1,4 +1,20 @@
-export const PersonalInfo = ({ data, onChange }) => (
+interface PersonalInfoProps {
+  data: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    birthYear: string;
+    birthMonth: string;
+    birthDay: string;
+    homePhone?: string;
+    cellPhone: string;
+    gender?: string;
+    idVerification?: File;
+  };
+  onChange: (field: string, value: any) => void;
+}
+
+export const PersonalInfo: React.FC<PersonalInfoProps> = ({ data, onChange }) => (
   <div className="space-y-4">
     <h3 className="text-xl text-white mb-4">Personal Information</h3>
     <form className="space-y-4">
@@ -105,7 +121,10 @@ export const PersonalInfo = ({ data, onChange }) => (
           type="file"
           accept="image/*,.pdf"
           className="w-full bg-gray-800 text-white rounded-lg p-3 border border-gray-700"
-          onChange={(e) => onChange('idVerification', e.target.files[0])}
+          onChange={(e) => {
+            const file = e.target.files ? e.target.files[0] : null;
+            onChange('idVerification', file);
+          }}
         />
         <p className="text-sm text-gray-400">Upload a valid government ID (driver's license, passport, etc.)</p>
       </div>
