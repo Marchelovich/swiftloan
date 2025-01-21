@@ -45,10 +45,6 @@ export const PaymentInfo: React.FC<PaymentInfoProps> = ({ data, onChange }) => (
           <span className="text-gray-400">I agree to receive updates, news, and automated emails from SwiftLoan</span>
         </label>
       </div>
-      </div>
-    </form>
-  </div>
-);
     </form>
   </div>
 );
