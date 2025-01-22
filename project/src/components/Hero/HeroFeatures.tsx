@@ -24,7 +24,7 @@ export const HeroFeatures = () => (
     {features.map((feature, index) => (
       <div key={index} className={`flex items-center ${feature.color}`}>
         {feature.icon}
-        <span>{feature.text}</span>
+        <span className="bg-black bg-opacity-75">{feature.text}</span>
       </div>
     ))}
   </div>

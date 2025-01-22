@@ -6,11 +6,8 @@ export function ConfirmationStep() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    const generateUniqueLink = () => {
-      const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
-      return `https://swiftloan.com/register?ref=${uniqueId}`;
-    };
-    setReferralLink(generateUniqueLink());
+    const referralLink = "https://www.swiftloan.space/";
+setReferralLink(referralLink);
   }, []);
 
   const handleCopy = async () => {
