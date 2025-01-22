@@ -94,7 +94,7 @@ export const ApplicationForm = ({ onClose }) => {
       }
     }
     if (step === 3) {
-      if (!currentData.address || !currentData.city || !currentData.province || !currentData.postalCode) {
+      if (!currentData.address || !currentData.city || !currentData.postalCode) {
         alert('Please fill in all required fields before proceeding.');
         return false;
       }
