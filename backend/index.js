@@ -7,16 +7,42 @@ const cors = require('cors');
 const Application = require('./models/Application');
 const multer = require('multer');
 const path = require('path');
-const app = express();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY); // Инициализация Stripe SDK
 const jwt = require('jsonwebtoken');
 
+const app = express();
 app.use(express.json());
 app.use(cors({
-  origin: 'http://localhost:5173',   // `${process.env.FRONTEND_URL}
-  methods: ['GET', 'POST', 'PUT', 'DELETE'], 
-  allowedHeaders: ['Content-Type', 'Authorization'], 
+  //origin: process.env.FRONTEND_URL, // Разрешить только фронтенд на этом порту
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Разрешенные методы
+  allowedHeaders: ['Content-Type', 'Authorization'], // Разрешенные заголовки
 }));
+
+// Middleware to set headers for every response
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const allowedOrigins = [
+    'https://swiftloan.space/',
+    process.env.FRONTEND_URL,
+    // другие субдомены
+  ];
+
+  if (allowedOrigins.includes(origin)) {
+    console.log(123)<
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  // Set CORS headers for all responses // Allow frontend domain
+  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'); // Allowed methods
+  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization'); // Allowed headers
+  res.set('Access-Control-Allow-Credentials', 'true'); // Allow credentials (cookies, etc.)
+
+  // Allow preflight requests to be handled for OPTIONS method
+  if (req.method === 'OPTIONS') {
+    res.status(204).end(); // No content, but OK response
+  } else {
+    next(); // Proceed to the next middleware or route
+  }
+});
 
 //file upload
 const storage = multer.diskStorage({
@@ -25,7 +51,7 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const extension = path.extname(file.originalname); 
+    const extension = path.extname(file.originalname);
     cb(null, file.fieldname + '-' + uniqueSuffix + extension);
   },
 });
@@ -42,12 +68,12 @@ app.post('/submit-application',  upload.fields([
     const proofOfResidenceFile = req.files?.proofOfResidence?.[0];
     const idVerificationFile = req.files?.idVerification?.[0];
 
-    const flattenedData = { 
-      ...applicationData, 
-       proofOfResidence: proofOfResidenceFile?.path,
+    const flattenedData = {
+      ...applicationData,
+      proofOfResidence: proofOfResidenceFile?.path,
       idVerification: idVerificationFile?.path
     };
-   
+
     if (flattenedData.birthYear && flattenedData.birthMonth && flattenedData.birthDay) {
       flattenedData.birth = `${flattenedData.birthYear}-${String(flattenedData.birthMonth).padStart(2, '0')}-${String(flattenedData.birthDay).padStart(2, '0')}`;
       delete flattenedData.birthYear;
@@ -56,6 +82,8 @@ app.post('/submit-application',  upload.fields([
     }
 
     const application = await Application.create(flattenedData);
+
+    sendEventToFacebook(application, req.ip, req.headers['user-agent']);
 
     res.status(201).json({
       message: 'Application submitted successfully!',
@@ -73,10 +101,12 @@ app.post('/send-help-email', async (req, res) => {
 
   try {
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'mail.adm.tools', // Replace with your SMTP host
+      port: 465, // Port for SSL/TLS
+      secure: true, // Use SSL/TLS
       auth: {
-        user: process.env.SENDER_EMAIL, 
-        pass: process.env.SENDER_EMAIL_PASSWORD,
+        user: process.env.SENDER_EMAIL, // Sender's email
+        pass: process.env.SENDER_EMAIL_PASSWORD, // Email password
       },
     });
 
@@ -109,26 +139,28 @@ app.post('/create-checkout-session', async (req, res) => {
       return res.status(404).send({ error: 'Application not found' });
     }
 
+    const customer = await stripe.customers.create({
+      email: application.email,
+      name: application.first_name + " " + application.last_name,
+      metadata: { userId: application.userId },
+    });
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
-      customer_email: application.email,
+      customer: customer.id,
       line_items: [
         {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: 'Loan Application Fee',
-              description: 'Processing fee for your loan application',
-            },
-            unit_amount: application.loanAmount * 100, // in cent
-          },
+          price: process.env.STRIPE_VARIFICATION_PRICE_ID,
           quantity: 1,
         },
       ],
       mode: 'payment',
       success_url: `${process.env.BACKEND_URL}/handle-success?session_id={CHECKOUT_SESSION_ID}`, // URL успешной оплаты
-      cancel_url: `${process.env.FRONTEND_URL}/cancel`, // URL отмены
+      cancel_url: `${process.env.FRONTEND_URL}`, // URL отмены
       metadata: { applicationId }, // Добавляем applicationId в метаданные
+      payment_intent_data: {
+        setup_future_usage: 'off_session', // Настраиваем сохранение карты
+      },
     });
 
     res.json({ url: session.url }); // Возвращаем URL для перехода на Stripe Checkout
@@ -148,6 +180,7 @@ app.get('/handle-success', async (req, res) => {
   try {
     // Получаем данные о сессии из Stripe
     const session = await stripe.checkout.sessions.retrieve(sessionId);
+    const customerId = session.customer;
 
     // Извлекаем applicationId из метаданных
     const applicationId = session.metadata.applicationId;
@@ -163,7 +196,32 @@ app.get('/handle-success', async (req, res) => {
     application.isPaid = true; // Добавьте поле `isPaid` в модель Application
     await application.save();
 
+    // Извлекаем ID сохранённого метода оплаты
+    const paymentMethodId = session.payment_intent
+        ? (await stripe.paymentIntents.retrieve(session.payment_intent)).payment_method
+        : null;
+
+    if (!paymentMethodId) {
+      throw new Error('No payment method was saved during the checkout session.');
+    }
+
+    // Устанавливаем метод оплаты как default для клиента
+    await stripe.customers.update(session.customer, {
+      invoice_settings: { default_payment_method: paymentMethodId },
+    });
+
+    const subscription = await stripe.subscriptions.create({
+      customer: customerId,
+      items: [
+        {
+          price: process.env.STRIPE_SUBSCRIPTION_PRICE_ID, // ID цены
+        },
+      ],
+      trial_end: Math.floor(Date.now() / 1000) + 2 * 24 * 60 * 60 // Trial period ends in 2 days
+    });
+
     console.log(`Payment successful for application ID: ${applicationId}`);
+    console.log("Subscriebed");
 
     // Перенаправляем на фронтенд (например, на страницу успеха)
     res.redirect(`${process.env.FRONTEND_URL}/?step=7&applicationId=${applicationId}`);
@@ -173,10 +231,45 @@ app.get('/handle-success', async (req, res) => {
   }
 });
 
+const axios = require('axios');
 
+const FACEBOOK_PIXEL_ID = process.env.FACEBOOK_PIXEL_ID;
+const FACEBOOK_ACCESS_TOKEN = process.env.FACEBOOK_ACCESS_TOKEN;
 
-//server 
-const PORT = process.env.PORT | 5000;
-app.listen(PORT, () => {
-  console.log(`${PORT}` );
+async function sendEventToFacebook(applicationData, userIp, userAgent) {
+  try {
+    const eventData = {
+      event_name: 'ApplicationSubmitted',
+      event_time: Math.floor(Date.now() / 1000),
+      event_source_url: 'https://yourwebsite.com/submit-application',
+      action_source: 'website',
+      user_data: {
+        client_ip_address: userIp,
+        client_user_agent: userAgent,
+        em: applicationData.email ? [applicationData.email] : [], // Хэшировать email можно для защиты
+        fn: applicationData.firstName ? [applicationData.firstName] : [],
+        ln: applicationData.lastName ? [applicationData.lastName] : []
+      },
+      custom_data: {
+        applicationId: applicationData.id,
+        proofOfResidence: !!applicationData.proofOfResidence,
+        idVerification: !!applicationData.idVerification
+      }
+    };
+
+    await axios.post(`https://graph.facebook.com/v19.0/${FACEBOOK_PIXEL_ID}/events`, {
+      data: [eventData],
+      access_token: FACEBOOK_ACCESS_TOKEN
+    });
+
+    console.log('Facebook Pixel event sent successfully');
+  } catch (err) {
+    console.error('Failed to send event to Facebook Pixel:', err.response?.data || err.message);
+  }
+}
+
+//server
+const PORT = process.env.PORT;
+app.listen(PORT, process.env.HOST, () => {
+  console.log(`server started ${PORT}` );
 });

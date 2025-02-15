@@ -43,14 +43,14 @@ const Application = sequelize.define('Application', {
   },
   gender: {
     type: DataTypes.ENUM(
-          'male',
-          'female',
-          'non-binary',
-          'transgender',
-          'genderqueer',
-          'two-spirit',
-          'other',
-          'prefer-not'
+        'male',
+        'female',
+        'non-binary',
+        'transgender',
+        'genderqueer',
+        'two-spirit',
+        'other',
+        'prefer-not'
     ),
     allowNull: false,
   },
@@ -72,18 +72,18 @@ const Application = sequelize.define('Application', {
   },
   province: {
     type: DataTypes.ENUM(
-          'AB',
-          'BC',
-          'MB',
-          'NB',
-          'NL',
-          'NS',
-          'ON',
-          'PE',
-          'QC',
-          'SK'
+        'AB',
+        'BC',
+        'MB',
+        'NB',
+        'NL',
+        'NS',
+        'ON',
+        'PE',
+        'QC',
+        'SK'
     ),
-    allowNull: false,
+    allowNull: true,
   },
   postalCode: {
     type: DataTypes.STRING,
@@ -95,23 +95,23 @@ const Application = sequelize.define('Application', {
   },
   employmentStatus: {
     type: DataTypes.ENUM(
-          'full-time',
-          'part-time',
-          'self-employed',
-          'unemployed',
-          'retired',
-          'student'
+        'full-time',
+        'part-time',
+        'self-employed',
+        'unemployed',
+        'retired',
+        'student'
     ),
     allowNull: false,
   },
   monthlyIncomeRange: {
     type: DataTypes.ENUM(
-          '0-1000',
-          '1001-2000',
-          '2001-3000',
-          '3001-4000',
-          '4001-5000',
-          '5001+'
+        '0-1000',
+        '1001-2000',
+        '2001-3000',
+        '3001-4000',
+        '4001-5000',
+        '5001+'
     ),
     allowNull: false,
   },
@@ -122,7 +122,7 @@ const Application = sequelize.define('Application', {
   isPaid: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
-  }, 
+  },
 });
 
 module.exports = Application;
