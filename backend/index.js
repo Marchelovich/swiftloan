@@ -83,8 +83,6 @@ app.post('/submit-application',  upload.fields([
 
     const application = await Application.create(flattenedData);
 
-    sendEventToFacebook(application, req.ip, req.headers['user-agent']);
-
     res.status(201).json({
       message: 'Application submitted successfully!',
       applicationId: application.id,
@@ -231,42 +229,6 @@ app.get('/handle-success', async (req, res) => {
   }
 });
 
-const axios = require('axios');
-
-const FACEBOOK_PIXEL_ID = process.env.FACEBOOK_PIXEL_ID;
-const FACEBOOK_ACCESS_TOKEN = process.env.FACEBOOK_ACCESS_TOKEN;
-
-async function sendEventToFacebook(applicationData, userIp, userAgent) {
-  try {
-    const eventData = {
-      event_name: 'ApplicationSubmitted',
-      event_time: Math.floor(Date.now() / 1000),
-      event_source_url: 'https://yourwebsite.com/submit-application',
-      action_source: 'website',
-      user_data: {
-        client_ip_address: userIp,
-        client_user_agent: userAgent,
-        em: applicationData.email ? [applicationData.email] : [], // Хэшировать email можно для защиты
-        fn: applicationData.firstName ? [applicationData.firstName] : [],
-        ln: applicationData.lastName ? [applicationData.lastName] : []
-      },
-      custom_data: {
-        applicationId: applicationData.id,
-        proofOfResidence: !!applicationData.proofOfResidence,
-        idVerification: !!applicationData.idVerification
-      }
-    };
-
-    await axios.post(`https://graph.facebook.com/v19.0/${FACEBOOK_PIXEL_ID}/events`, {
-      data: [eventData],
-      access_token: FACEBOOK_ACCESS_TOKEN
-    });
-
-    console.log('Facebook Pixel event sent successfully');
-  } catch (err) {
-    console.error('Failed to send event to Facebook Pixel:', err.response?.data || err.message);
-  }
-}
 
 //server
 const PORT = process.env.PORT;

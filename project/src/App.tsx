@@ -12,6 +12,11 @@ import { ApplicationForm } from './components/ApplicationForm';
 const urlParams = new URLSearchParams(window.location.search);
 const step = urlParams.get('step') as unknown as number;
 
+import ReactPixel from 'react-facebook-pixel';
+
+ReactPixel.init('3992513714402585'); // Инициализация пикселя
+ReactPixel.pageView(); // Отслеживание просмотра страницы
+
 const App = () => {
   const [showApplication, setShowApplication] = useState(step == 7);
   const [formData, setFormData] = useState({
